@@ -1,0 +1,10 @@
+---
+
+###
+### Main entrypoint
+###
+- include_tasks: create_nat_gateway.yml
+  vars:
+    natgw: "{{ item }}"
+  with_items:
+    - "{{ aws_nat_gateway }}"

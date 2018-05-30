@@ -1,0 +1,6 @@
+---
+
+aws_nat_gateway_default_region: eu-central-1
+
+### nat define filters to find subnets
+aws_nat_gateway: []
