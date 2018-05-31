@@ -14,7 +14,7 @@ When using the sane defaults, the only thing to configure for each nat gateway i
 * the subnet_filter (tags) find the subnet-id
 
 ```yml
-aws_nat_gateway:
+aws_vpc_nat_gateway:
   - subnet_filter:
       - key: "tag:Name"
         val: "sn-1"
@@ -30,7 +30,7 @@ aws_nat_gateway:
 Instead of using somebody's sane defaults, you can also add tags for each nat gateway.
 
 ```yml
-aws_nat_gateway:
+aws_vpc_nat_gateway:
   - subnet_filter:
       - key: "tag:Name"
         val: "sn-1"

@@ -7,4 +7,4 @@
   vars:
     natgw: "{{ item }}"
   with_items:
-    - "{{ aws_nat_gateway }}"
+    - "{{ aws_vpc_nat_gateway }}"

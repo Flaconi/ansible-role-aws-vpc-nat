@@ -5,8 +5,8 @@
     aws_access_key: "{{ lookup('ENV', 'AWS_ACCESS_KEY') | default(omit) }}"
     aws_secret_key: "{{ lookup('ENV', 'AWS_SECRET_KEY') | default(omit)  }}"
     security_token: "{{ lookup('ENV', 'AWS_SECURITY_TOKEN') | default(omit) }}"
-    profile: "{{ aws_nat_gateway_aws_profile | default(omit) }}"
-    region: "{{ natgw.region | default(aws_nat_gateway_default_region) }}"
+    profile: "{{ aws_vpc_nat_profile | default(omit) }}"
+    region: "{{ natgw.region | default(aws_vpc_nat_default_region) }}"
     filters: "{{ natgw.subnet_filter | get_attr('key', 'val') }}"
   register: _aws_subnet_facts
 
