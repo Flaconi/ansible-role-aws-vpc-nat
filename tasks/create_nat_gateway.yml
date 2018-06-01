@@ -1,0 +1,43 @@
+---
+
+- name: ensure array is defined correctly
+  assert:
+    that:
+      - natgw.subnet_filter is defined
+    msg: "aws_vpc_nat_gateway[x].subnet_filter not defined"
+
+###
+### gather subnet facts
+###
+- include_tasks: gather_subnet_facts.yml
+
+###
+### create nat gateway if not exists
+###
+- name: "create nat gateway for Subnet with ID {{ _aws_subnet_id }}"
+  ec2_vpc_nat_gateway:
+    aws_access_key: "{{ lookup('ENV', 'AWS_ACCESS_KEY') | default(omit) }}"
+    aws_secret_key: "{{ lookup('ENV', 'AWS_SECRET_KEY') | default(omit)  }}"
+    security_token: "{{ lookup('ENV', 'AWS_SECURITY_TOKEN') | default(omit) }}"
+    profile: "{{ aws_vpc_nat_profile | default(omit) }}"
+    subnet_id: "{{ _aws_subnet_id }}"
+    region: "{{ natgw.region | default(aws_vpc_nat_default_region | default(omit)) }}"
+    if_exist_do_not_create: True
+    state: present #
+    wait_timeout: 300
+  register: _aws_vpc_nat_facts
+
+###
+### create tags if defined
+###
+- name: "create tags for nat gateway with id {{ _aws_vpc_nat_facts.nat_gateway_id }}"
+  ec2_tag:
+    aws_access_key: "{{ lookup('ENV', 'AWS_ACCESS_KEY') | default(omit) }}"
+    aws_secret_key: "{{ lookup('ENV', 'AWS_SECRET_KEY') | default(omit)  }}"
+    security_token: "{{ lookup('ENV', 'AWS_SECURITY_TOKEN') | default(omit) }}"
+    profile: "{{ aws_vpc_nat_profile | default(omit) }}"
+    region: "{{ natgw.region | default(aws_vpc_nat_default_region | default(omit)) }}"
+    resource: "{{ _aws_vpc_nat_facts.nat_gateway_id }}"
+    state: present
+    tags: "{{ natgw.tags | get_attr('key', 'val') }}"
+  when: natgw.tags is defined
