@@ -4,7 +4,7 @@ This role is able to create any number of NAT gateways per VPC and per subnet.
 
 [![Build Status](https://travis-ci.org/Flaconi/ansible-role-aws-vpc-nat.svg?branch=master)](https://travis-ci.org/Flaconi/ansible-role-aws-vpc-nat)
 [![Version](https://img.shields.io/github/tag/Flaconi/ansible-role-aws-vpc-nat.svg)](https://github.com/Flaconi/ansible-role-aws-vpc-nat/tags)
-<!-- [![Ansible Galaxy](https://img.shields.io/ansible/role/d/25920.svg)](https://galaxy.ansible.com/Flaconi/aws-vpc-nat/) -->
+[![Ansible Galaxy](https://img.shields.io/ansible/role/d/26013.svg)](https://galaxy.ansible.com/Flaconi/aws-vpc-nat/)
 
 ## Requirements
 
