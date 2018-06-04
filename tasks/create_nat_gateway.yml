@@ -30,6 +30,7 @@
     # Fixed values
     state: present
     if_exist_do_not_create: True
+    wait: True
     wait_timeout: 300
     # Looked-up values
     subnet_id: "{{ _aws_subnet_id }}"
