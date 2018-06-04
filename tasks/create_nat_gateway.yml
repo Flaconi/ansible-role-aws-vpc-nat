@@ -27,15 +27,18 @@
 ###
 - name: "create nat gateway for Subnet with ID {{ _aws_subnet_id }}"
   ec2_vpc_nat_gateway:
+    # Fixed values
+    state: present
+    if_exist_do_not_create: True
+    wait_timeout: 300
+    # Looked-up values
+    subnet_id: "{{ _aws_subnet_id }}"
+    # Optional values
+    region: "{{ natgw.region | default(aws_vpc_nat_default_region | default(omit)) }}"
     aws_access_key: "{{ lookup('ENV', 'AWS_ACCESS_KEY') | default(omit) }}"
     aws_secret_key: "{{ lookup('ENV', 'AWS_SECRET_KEY') | default(omit)  }}"
     security_token: "{{ lookup('ENV', 'AWS_SECURITY_TOKEN') | default(omit) }}"
     profile: "{{ aws_vpc_nat_profile | default(omit) }}"
-    subnet_id: "{{ _aws_subnet_id }}"
-    region: "{{ natgw.region | default(aws_vpc_nat_default_region | default(omit)) }}"
-    if_exist_do_not_create: True
-    state: present #
-    wait_timeout: 300
   register: _aws_vpc_nat_facts
 
 ###
@@ -43,12 +46,16 @@
 ###
 - name: "create tags for nat gateway with id {{ _aws_vpc_nat_facts.nat_gateway_id }}"
   ec2_tag:
+    # Fixed values
+    state: present
+    # Looked-up values
+    resource: "{{ _aws_vpc_nat_facts.nat_gateway_id }}"
+    # Required values
+    tags: "{{ natgw.tags | get_attr('key', 'val') }}"
+    # Optional values
+    region: "{{ natgw.region | default(aws_vpc_nat_default_region | default(omit)) }}"
     aws_access_key: "{{ lookup('ENV', 'AWS_ACCESS_KEY') | default(omit) }}"
     aws_secret_key: "{{ lookup('ENV', 'AWS_SECRET_KEY') | default(omit)  }}"
     security_token: "{{ lookup('ENV', 'AWS_SECURITY_TOKEN') | default(omit) }}"
     profile: "{{ aws_vpc_nat_profile | default(omit) }}"
-    region: "{{ natgw.region | default(aws_vpc_nat_default_region | default(omit)) }}"
-    resource: "{{ _aws_vpc_nat_facts.nat_gateway_id }}"
-    state: present
-    tags: "{{ natgw.tags | get_attr('key', 'val') }}"
   when: natgw.tags is defined
