@@ -24,19 +24,17 @@ Additional variables that can be used (either as `host_vars`/`group_vars` or via
 #### With sane defaults
 When using the sane defaults, the only thing to configure for each nat gateway is:
 
-* the subnet_filter (tags) to find the subnet-id
+* either the `subnet_filter` to find one unique subnet by filter (tags, ids, etc)
+* or the `subnet_name` to find one unique subnet by name
 
 ```yml
 aws_vpc_nat_gateway:
+  # Add Nat GW to a subnet found by filter
   - subnet_filter:
       - key: "tag:Name"
         val: "sn-1"
-  - subnet_filter:
-      - key: "tag:Name"
-        val: "sn-2"
-  - subnet_filter:
-      - key: "tag:Name"
-        val: "sn-3"
+  # Add Nat GW to a subnet found by name
+  - subnet_name: sn-2
 ```
 
 #### All available parameter
@@ -44,6 +42,7 @@ Instead of using somebody's sane defaults, you can also add tags for each nat ga
 
 ```yml
 aws_vpc_nat_gateway:
+  # Add Nat GW to a subnet found by filter
   - subnet_filter:
       - key: "tag:Name"
         val: "sn-1"
@@ -53,13 +52,9 @@ aws_vpc_nat_gateway:
         - key: env
           val: production
     region: eu-central-1
-  - subnet_filter:
-      - key: "tag:Name"
-        val: "sn-2"
+  # Add Nat GW to a subnet found by name
+  - subnet_name: sn-2
     tags:
         - key: Name
           val: nat2
-  - subnet_filter:
-      - key: "tag:Name"
-        val: "sn-3"
 ```

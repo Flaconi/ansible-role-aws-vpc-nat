@@ -1,6 +1,6 @@
 ---
 
-- name: gather subnet facts
+- name: gather subnet facts by filter
   ec2_vpc_subnet_facts:
     aws_access_key: "{{ lookup('ENV', 'AWS_ACCESS_KEY') | default(omit) }}"
     aws_secret_key: "{{ lookup('ENV', 'AWS_SECRET_KEY') | default(omit)  }}"
