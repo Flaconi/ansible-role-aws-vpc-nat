@@ -3,8 +3,12 @@
 - name: ensure array is defined correctly
   assert:
     that:
-      - natgw.subnet_filter is defined
-    msg: "aws_vpc_nat_gateway[x].subnet_filter not defined"
+      # subnet_filter OR subnet_name must be defined
+      - natgw.subnet_filter is defined or natgw.subnet_name is defined
+      # subnet_filter AND subnet_name must not be defined at the same time
+      - not (natgw.subnet_filter is defined and natgw.subnet_name is defined)
+    msg: "aws_vpc_nat_gateway[x].subnet_filter XOR subnet_name must be defined"
+
 
 ###
 ### gather subnet facts
