@@ -9,7 +9,14 @@
 ###
 ### gather subnet facts
 ###
-- include_tasks: gather_subnet_facts.yml
+- include_tasks: gather_subnet_facts_by_filter.yml
+  when:
+    - natgw.subnet_filter is defined
+
+- include_tasks: gather_subnet_facts_by_name.yml
+  when:
+    - natgw.subnet_name is defined
+
 
 ###
 ### create nat gateway if not exists
