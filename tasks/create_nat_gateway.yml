@@ -1,6 +1,6 @@
 ---
 
-- name: ensure array is defined correctly
+- name: ensure subnet filter or name is defined
   assert:
     that:
       # subnet_filter OR subnet_name must be defined
@@ -9,17 +9,53 @@
       - not (natgw.subnet_filter is defined and natgw.subnet_name is defined)
     msg: "aws_vpc_nat_gateway[x].subnet_filter XOR subnet_name must be defined"
 
+- name: ensure eip filter and name are not both defined
+  assert:
+    that:
+      # eip_filter AND eip_name must not be defined at the same time
+      - not (natgw.eip_filter is defined and natgw.eip_name is defined)
+    msg: "aws_vpc_nat_gateway[x].eip_filter XOR eip_name must be defined"
+
 
 ###
-### gather subnet facts
+### gather facts
 ###
+
+- name: reset values for every loop iteration
+  set_fact:
+    _aws_subnet_id:
+    _aws_subnet_name:
+    _aws_eip_id:
+    _aws_eip_ip:
+
+# Returns:
+# * _aws_subnet_id
+# * _aws_subnet_name
 - include_tasks: gather_subnet_facts_by_filter.yml
   when:
     - natgw.subnet_filter is defined
 
+# Returns:
+# * _aws_subnet_id
+# * _aws_subnet_name
 - include_tasks: gather_subnet_facts_by_name.yml
   when:
     - natgw.subnet_name is defined
+
+
+# Returns (if desired):
+# * _aws_eip_id
+# * _aws_eip_ip
+- include_tasks: gather_eip_facts_by_filter.yml
+  when:
+    - natgw.eip_filter is defined
+
+# Returns (if desired):
+# * _aws_eip_id
+# * _aws_eip_ip
+- include_tasks: gather_eip_facts_by_name.yml
+  when:
+    - natgw.eip_name is defined
 
 
 ###
@@ -35,6 +71,7 @@
     # Looked-up values
     subnet_id: "{{ _aws_subnet_id }}"
     # Optional values
+    allocation_id: "{{ _aws_eip_id | default(omit) }}"
     region: "{{ natgw.region | default(aws_vpc_nat_default_region | default(omit)) }}"
     aws_access_key: "{{ lookup('ENV', 'AWS_ACCESS_KEY') | default(omit) }}"
     aws_secret_key: "{{ lookup('ENV', 'AWS_SECRET_KEY') | default(omit)  }}"
