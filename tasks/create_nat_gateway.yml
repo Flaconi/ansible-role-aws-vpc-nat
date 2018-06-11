@@ -82,7 +82,7 @@
 ###
 ### create tags if defined
 ###
-- name: "create tags for nat gateway with id {{ _aws_vpc_nat_facts.nat_gateway_id }}"
+- name: "nat gateway with ID {{ _aws_vpc_nat_facts.nat_gateway_id }} should be tagged"
   ec2_tag:
     # Fixed values
     state: present
