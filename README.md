@@ -33,11 +33,13 @@ When using the sane defaults, the only thing to configure for each nat gateway i
 ```yml
 aws_vpc_nat_gateway:
   # Add Nat GW to a subnet found by filter and create EIP automatically
-  - subnet_filter:
+  - name: natgw-1
+    subnet_filter:
       - key: "tag:Name"
         val: "sn-1"
   # Add Nat GW to a subnet found by name and create EIP automatically
-  - subnet_name: sn-2
+  - name: natgw-2
+    subnet_name: sn-2
 ```
 
 #### All available parameter
@@ -58,7 +60,8 @@ aws_vpc_nat_subnet_filter_additional:
 
 aws_vpc_nat_gateway:
   # Add Nat GW to a subnet found by filter
-  - subnet_filter:
+  - name: natgw-1
+    subnet_filter:
       - key: "tag:Name"
         val: "sn-1"
     # re-use existing EIP found by filter
@@ -66,19 +69,18 @@ aws_vpc_nat_gateway:
       - key: "tag:Name"
         val: "eip-1"
     tags:
-      - key: Name
-        val: nat1
       - key: env
         val: production
     region: eu-central-1
 
   # Add Nat GW to a subnet found by name
-  - subnet_name: sn-2
+  - name: natgw-2
+    subnet_name: sn-2
     # re-use existing EIP found by name
     eip_name: eip-2
     tags:
-      - key: Name
-        val: nat2
+      - key: env
+        val: testing
 ```
 
 

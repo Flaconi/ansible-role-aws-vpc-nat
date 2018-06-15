@@ -1,5 +1,12 @@
 ---
 
+- name: ensure nat gw array contains name key
+  assert:
+    that:
+      - natgw.name is defined
+      - natgw.name | length > 0
+    msg: "aws_vpc_nat_gateways[x].name is not defined, but required"
+
 - name: ensure subnet filter or name is defined
   assert:
     that:
@@ -82,6 +89,17 @@
 ###
 ### create tags if defined
 ###
+
+- name: set natgw tags
+  set_fact:
+    _aws_vpc_natgw_tags: |
+      {{
+        natgw.tags | default([]) + [{
+          'key': 'Name',
+          'val': natgw.name
+        }]
+      }}
+
 - name: "nat gateway with ID {{ _aws_vpc_nat_facts.nat_gateway_id }} should be tagged"
   ec2_tag:
     # Fixed values
@@ -89,7 +107,7 @@
     # Looked-up values
     resource: "{{ _aws_vpc_nat_facts.nat_gateway_id }}"
     # Required values
-    tags: "{{ natgw.tags | get_attr('key', 'val') }}"
+    tags: "{{ _aws_vpc_natgw_tags | get_attr('key', 'val') }}"
     # Optional values
     region: "{{ natgw.region | default(aws_vpc_nat_default_region | default(omit)) }}"
     aws_access_key: "{{ lookup('ENV', 'AWS_ACCESS_KEY') | default(omit) }}"
