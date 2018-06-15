@@ -14,10 +14,13 @@ This role is able to create any number of NAT gateways per VPC and per subnet.
 
 Additional variables that can be used (either as `host_vars`/`group_vars` or via command line args):
 
-| Variable                     | Description                  |
-|------------------------------|------------------------------|
-| `aws_vpc_nat_profile`        | Boto profile name to be used |
-| `aws_vpc_nat_default_region` | Default region to use        |
+| Variable                               | Description                  |
+|----------------------------------------|------------------------------|
+| `aws_vpc_nat_profile`                  | Boto profile name to be used |
+| `aws_vpc_nat_default_region`           | Default region to use        |
+| `aws_vpc_nat_eip_filter_additional`    | Additional `key` `val` filter to add to `eip_filter` and `eip_name` by default |
+| `aws_vpc_nat_subnet_filter_additional` | Additional `key` `val` filter to add to `subnet_filter` and `subnet_name` by default |
+
 
 ## Example definition
 
@@ -41,6 +44,16 @@ aws_vpc_nat_gateway:
 Instead of using somebody's sane defaults, you can also add tags for each nat gateway.
 
 ```yml
+# Ensure EIP filter (name or filter) and subnet filter (name or filter)
+# includes that their state is already created. (not pending nor deleted)
+aws_vpc_nat_eip_filter_additional:
+  - key: state
+    val: available
+
+aws_vpc_nat_subnet_filter_additional:
+  - key: state
+    val: available
+
 aws_vpc_nat_gateway:
   # Add Nat GW to a subnet found by filter
   - subnet_filter:
