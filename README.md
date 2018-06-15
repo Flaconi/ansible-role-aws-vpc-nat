@@ -44,15 +44,17 @@ aws_vpc_nat_gateway:
 Instead of using somebody's sane defaults, you can also add tags for each nat gateway.
 
 ```yml
-# Ensure EIP filter (name or filter) and subnet filter (name or filter)
+# Ensure subnet filter (name or filter)
 # includes that their state is already created. (not pending nor deleted)
 aws_vpc_nat_eip_filter_additional:
   - key: state
     val: available
 
+# Ensure EIP filter (name or filter)
+# includes that their owned by a vpc
 aws_vpc_nat_subnet_filter_additional:
-  - key: state
-    val: available
+  - key: domain
+    val: vpc
 
 aws_vpc_nat_gateway:
   # Add Nat GW to a subnet found by filter
