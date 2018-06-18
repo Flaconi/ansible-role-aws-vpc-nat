@@ -1,5 +1,12 @@
 ---
 
+- name: ensure nat gw array contains name key
+  assert:
+    that:
+      - natgw.name is defined
+      - natgw.name | length > 0
+    msg: "aws_vpc_nat_gateways[x].name is not defined, but required"
+
 - name: ensure subnet filter or name is defined
   assert:
     that:
@@ -58,9 +65,49 @@
     - natgw.eip_name is defined
 
 
+# Idempotence Issue
+# -----------------
+#
+# ec2_vpc_nat_gateway returns a hard-coded ID in chek mode (nat-123456789)
+# this results in showing the playbook as 'changed' when doing a dry run.
+# To overcome this issue we do the following:
+#
+# 1. Gather existing NAT GW in that subnet
+# 2. If found:
+#    2.1. Use its ID for tagging
+# 3. If not found:
+#    3.1. Create it
+#    3.2. Gather facts again to find its id
+#    3.3  Use its ID for tagging
+
+
+###
+### Check if subnet already has a Nat GW
+###
+
+- name: set nat gateway filters
+  set_fact:
+    _aws_vpc_nat_gw_filter:
+      - key: state
+        val: available
+      - key: subnet-id
+        val: "{{ _aws_subnet_id }}"
+
+- name: find existing nat gateway in subnet
+  ec2_vpc_nat_gateway_facts:
+    aws_access_key: "{{ lookup('ENV', 'AWS_ACCESS_KEY') | default(omit) }}"
+    aws_secret_key: "{{ lookup('ENV', 'AWS_SECRET_KEY') | default(omit)  }}"
+    security_token: "{{ lookup('ENV', 'AWS_SECURITY_TOKEN') | default(omit) }}"
+    profile: "{{ aws_vpc_nat_profile | default(omit) }}"
+    region: "{{ natgw.region | default(aws_vpc_nat_default_region | default(omit)) }}"
+    filters: "{{ _aws_vpc_nat_gw_filter | get_attr('key', 'val') }}"
+  register: _aws_vpc_nat_facts
+
+
 ###
 ### create nat gateway if not exists
 ###
+
 - name: "create nat gateway for Subnet with ID {{ _aws_subnet_id }}"
   ec2_vpc_nat_gateway:
     # Fixed values
@@ -77,23 +124,50 @@
     aws_secret_key: "{{ lookup('ENV', 'AWS_SECRET_KEY') | default(omit)  }}"
     security_token: "{{ lookup('ENV', 'AWS_SECURITY_TOKEN') | default(omit) }}"
     profile: "{{ aws_vpc_nat_profile | default(omit) }}"
+  when:
+    - _aws_vpc_nat_facts.result | length == 0
+
+- name: register created nat gateway
+  ec2_vpc_nat_gateway_facts:
+    aws_access_key: "{{ lookup('ENV', 'AWS_ACCESS_KEY') | default(omit) }}"
+    aws_secret_key: "{{ lookup('ENV', 'AWS_SECRET_KEY') | default(omit)  }}"
+    security_token: "{{ lookup('ENV', 'AWS_SECURITY_TOKEN') | default(omit) }}"
+    profile: "{{ aws_vpc_nat_profile | default(omit) }}"
+    region: "{{ natgw.region | default(aws_vpc_nat_default_region | default(omit)) }}"
+    filters: "{{ _aws_vpc_nat_gw_filter | get_attr('key', 'val') }}"
   register: _aws_vpc_nat_facts
 
+
 ###
-### create tags if defined
+### Tag nat gateway
 ###
-- name: "nat gateway with ID {{ _aws_vpc_nat_facts.nat_gateway_id }} should be tagged"
+
+- name: set natgw tags
+  set_fact:
+    _aws_vpc_natgw_tags: |
+      {{
+        natgw.tags | default([]) + [{
+          'key': 'Name',
+          'val': natgw.name
+        }]
+      }}
+
+- name: "ensure nat gateway with ID {{ _aws_vpc_nat_facts.result[0].nat_gateway_id }} is tagged"
   ec2_tag:
     # Fixed values
     state: present
     # Looked-up values
-    resource: "{{ _aws_vpc_nat_facts.nat_gateway_id }}"
+    resource: "{{ _aws_vpc_nat_facts.result[0].nat_gateway_id }}"
     # Required values
-    tags: "{{ natgw.tags | get_attr('key', 'val') }}"
+    tags: "{{ _aws_vpc_natgw_tags | get_attr('key', 'val') }}"
     # Optional values
     region: "{{ natgw.region | default(aws_vpc_nat_default_region | default(omit)) }}"
     aws_access_key: "{{ lookup('ENV', 'AWS_ACCESS_KEY') | default(omit) }}"
     aws_secret_key: "{{ lookup('ENV', 'AWS_SECRET_KEY') | default(omit)  }}"
     security_token: "{{ lookup('ENV', 'AWS_SECURITY_TOKEN') | default(omit) }}"
     profile: "{{ aws_vpc_nat_profile | default(omit) }}"
-  when: natgw.tags is defined
+  when:
+    - _aws_vpc_nat_facts.result is defined
+    - _aws_vpc_nat_facts.result | length == 1
+    - _aws_vpc_nat_facts.result.0 is defined
+    - _aws_vpc_nat_facts.result[0].nat_gateway_id is defined

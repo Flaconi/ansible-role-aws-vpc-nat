@@ -14,10 +14,13 @@ This role is able to create any number of NAT gateways per VPC and per subnet.
 
 Additional variables that can be used (either as `host_vars`/`group_vars` or via command line args):
 
-| Variable                     | Description                  |
-|------------------------------|------------------------------|
-| `aws_vpc_nat_profile`        | Boto profile name to be used |
-| `aws_vpc_nat_default_region` | Default region to use        |
+| Variable                               | Description                  |
+|----------------------------------------|------------------------------|
+| `aws_vpc_nat_profile`                  | Boto profile name to be used |
+| `aws_vpc_nat_default_region`           | Default region to use        |
+| `aws_vpc_nat_eip_filter_additional`    | Additional `key` `val` filter to add to `eip_filter` and `eip_name` by default |
+| `aws_vpc_nat_subnet_filter_additional` | Additional `key` `val` filter to add to `subnet_filter` and `subnet_name` by default |
+
 
 ## Example definition
 
@@ -30,20 +33,35 @@ When using the sane defaults, the only thing to configure for each nat gateway i
 ```yml
 aws_vpc_nat_gateway:
   # Add Nat GW to a subnet found by filter and create EIP automatically
-  - subnet_filter:
+  - name: natgw-1
+    subnet_filter:
       - key: "tag:Name"
         val: "sn-1"
   # Add Nat GW to a subnet found by name and create EIP automatically
-  - subnet_name: sn-2
+  - name: natgw-2
+    subnet_name: sn-2
 ```
 
 #### All available parameter
 Instead of using somebody's sane defaults, you can also add tags for each nat gateway.
 
 ```yml
+# Ensure subnet filter (name or filter)
+# includes that their state is already created. (not pending nor deleted)
+aws_vpc_nat_eip_filter_additional:
+  - key: state
+    val: available
+
+# Ensure EIP filter (name or filter)
+# includes that their owned by a vpc
+aws_vpc_nat_subnet_filter_additional:
+  - key: domain
+    val: vpc
+
 aws_vpc_nat_gateway:
   # Add Nat GW to a subnet found by filter
-  - subnet_filter:
+  - name: natgw-1
+    subnet_filter:
       - key: "tag:Name"
         val: "sn-1"
     # re-use existing EIP found by filter
@@ -51,17 +69,37 @@ aws_vpc_nat_gateway:
       - key: "tag:Name"
         val: "eip-1"
     tags:
-      - key: Name
-        val: nat1
       - key: env
         val: production
     region: eu-central-1
 
   # Add Nat GW to a subnet found by name
-  - subnet_name: sn-2
+  - name: natgw-2
+    subnet_name: sn-2
     # re-use existing EIP found by name
     eip_name: eip-2
     tags:
-      - key: Name
-        val: nat2
+      - key: env
+        val: testing
+```
+
+
+## Testing
+
+#### Requirements
+
+* Docker
+* [yamllint](https://github.com/adrienverge/yamllint)
+
+#### Run tests
+
+```bash
+# Lint the source files
+make lint
+
+# Run integration tests with default Ansible version
+make test
+
+# Run integration tests with custom Ansible version
+make test ANSIBLE_VERSION=2.4
 ```
